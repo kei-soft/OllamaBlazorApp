@@ -9,7 +9,6 @@ namespace OllamaConsoleApp
             test();
         }
 
-
         static async void test()
         {
             try
@@ -35,13 +34,9 @@ namespace OllamaConsoleApp
                 // select a model which should be used for further operations
                 ollama.SelectedModel = "llama3.2:latest";
 
-                var models = await ollama.ListLocalModels();
-
-
+                //var models = await ollama.ListLocalModels();
                 await foreach (var stream in ollama.Generate("How are you today?"))
                     Console.Write(stream.Response);
-
-
             }
             catch (Exception ex)
             {
