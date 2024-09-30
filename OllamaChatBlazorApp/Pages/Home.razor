@@ -6,27 +6,38 @@
 @using Markdig
 @inject IJSRuntime JSRuntime
 
-<h1>Ollama Chat</h1>
+<div class="chat-app">
+    <h1>Ollama Chat</h1>
 
-<div class="chat-container">
-    @foreach (var message in chatHistory)
-    {
-        <div class="@(message.IsUser ? "user-message" : "ai-message")">
-            @if (message.IsUser)
+    <div class="model-selector">
+        <select @bind="selectedModel">
+            @foreach (var model in availableModels)
             {
-                <p>@message.Content</p>
+                <option value="@model">@model</option>
             }
-            else
-            {
-                @((MarkupString)Markdown.ToHtml(message.Content))
-            }
-        </div>
-    }
-</div>
+        </select>
+    </div>
 
-<div class="input-container">
-    <input @bind="userInput" @onkeyup="HandleKeyUp" placeholder="메시지를 입력하세요..." />
-    <button @onclick="SendMessage" disabled="@isSending">전송</button>
+    <div class="chat-container">
+        @foreach (var message in chatHistory)
+        {
+            <div class="@(message.IsUser ? "user-message" : "ai-message")">
+                @if (message.IsUser)
+                {
+                    <p>@message.Content</p>
+                }
+                else
+                {
+                    @((MarkupString)Markdown.ToHtml(message.Content))
+                }
+            </div>
+        }
+    </div>
+
+    <div class="input-container">
+        <input @bind="userInput" @onkeyup="HandleKeyUp" placeholder="메시지를 입력하세요..." />
+        <button @onclick="SendMessage" disabled="@isSending">전송</button>
+    </div>
 </div>
 
 @code {
@@ -34,13 +45,22 @@
     private string userInput = "";
     private bool isSending = false;
     private OllamaApiClient ollama;
+    private List<string> availableModels = new List<string>();
+    private string selectedModel = "";
 
     protected override async Task OnInitializedAsync()
     {
         var uri = new Uri("http://localhost:11434");
         ollama = new OllamaApiClient(uri);
+
         var models = await ollama.ListLocalModels();
-        ollama.SelectedModel = "llama3.2:latest";
+        availableModels = models.Select(m => m.Name).ToList();
+
+        if (availableModels.Any())
+        {
+            selectedModel = availableModels.First();
+            ollama.SelectedModel = selectedModel;
+        }
 
         await base.OnInitializedAsync();
     }
@@ -63,6 +83,7 @@
         var aiMessage = new ChatMessage { Content = "", IsUser = false };
         chatHistory.Add(aiMessage);
 
+        ollama.SelectedModel = selectedModel;
         string currentResponse = "";
         await foreach (var stream in ollama.Generate(userInput))
         {
@@ -84,8 +105,29 @@
 }
 
 <style>
+    .chat-app {
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        padding: 20px;
+        box-sizing: border-box;
+    }
+
+    h1 {
+        margin-top: 0;
+    }
+
+    .model-selector {
+        margin-bottom: 10px;
+    }
+
+        .model-selector select {
+            width: 100%;
+            padding: 5px;
+        }
+
     .chat-container {
-        height: 400px;
+        flex-grow: 1;
         overflow-y: auto;
         border: 1px solid #ccc;
         padding: 10px;
