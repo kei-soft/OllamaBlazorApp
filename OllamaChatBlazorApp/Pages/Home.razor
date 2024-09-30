@@ -1,0 +1,151 @@
+﻿@page "/"
+@using System.Net.Http
+@using System.Text.Json
+@using Microsoft.AspNetCore.Components
+@using OllamaSharp
+@using Markdig
+@inject IJSRuntime JSRuntime
+
+<h1>Ollama Chat</h1>
+
+<div class="chat-container">
+    @foreach (var message in chatHistory)
+    {
+        <div class="@(message.IsUser ? "user-message" : "ai-message")">
+            @if (message.IsUser)
+            {
+                <p>@message.Content</p>
+            }
+            else
+            {
+                @((MarkupString)Markdown.ToHtml(message.Content))
+            }
+        </div>
+    }
+</div>
+
+<div class="input-container">
+    <input @bind="userInput" @onkeyup="HandleKeyUp" placeholder="메시지를 입력하세요..." />
+    <button @onclick="SendMessage" disabled="@isSending">전송</button>
+</div>
+
+@code {
+    private List<ChatMessage> chatHistory = new List<ChatMessage>();
+    private string userInput = "";
+    private bool isSending = false;
+    private OllamaApiClient ollama;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var uri = new Uri("http://localhost:11434");
+        ollama = new OllamaApiClient(uri);
+        var models = await ollama.ListLocalModels();
+        ollama.SelectedModel = "llama3.2:latest";
+
+        await base.OnInitializedAsync();
+    }
+
+    private async Task HandleKeyUp(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            await SendMessage();
+        }
+    }
+
+    private async Task SendMessage()
+    {
+        if (string.IsNullOrWhiteSpace(userInput) || isSending)
+            return;
+
+        isSending = true;
+        chatHistory.Add(new ChatMessage { Content = userInput, IsUser = true });
+        var aiMessage = new ChatMessage { Content = "", IsUser = false };
+        chatHistory.Add(aiMessage);
+
+        string currentResponse = "";
+        await foreach (var stream in ollama.Generate(userInput))
+        {
+            currentResponse += stream.Response;
+            aiMessage.Content = currentResponse;
+            StateHasChanged();
+            await Task.Delay(10); // UI 업데이트를 위한 짧은 지연
+        }
+
+        userInput = "";
+        isSending = false;
+    }
+
+    private class ChatMessage
+    {
+        public string Content { get; set; }
+        public bool IsUser { get; set; }
+    }
+}
+
+<style>
+    .chat-container {
+        height: 400px;
+        overflow-y: auto;
+        border: 1px solid #ccc;
+        padding: 10px;
+        margin-bottom: 10px;
+    }
+
+    .user-message {
+        background-color: #e6f2ff;
+        padding: 5px;
+        margin: 5px 0;
+        border-radius: 5px;
+    }
+
+    .ai-message {
+        background-color: #f0f0f0;
+        padding: 5px;
+        margin: 5px 0;
+        border-radius: 5px;
+    }
+
+    .input-container {
+        display: flex;
+    }
+
+    input {
+        flex-grow: 1;
+        padding: 5px;
+    }
+
+    button {
+        padding: 5px 10px;
+        margin-left: 5px;
+    }
+
+    /* Markdown 스타일링 */
+    .ai-message :deep(h1, h2, h3, h4, h5, h6) {
+        margin-top: 0.5em;
+        margin-bottom: 0.5em;
+    }
+
+    .ai-message :deep(pre) {
+        background-color: #f4f4f4;
+        padding: 10px;
+        border-radius: 4px;
+        overflow-x: auto;
+    }
+
+    .ai-message :deep(code) {
+        background-color: #f4f4f4;
+        padding: 2px 4px;
+        border-radius: 4px;
+    }
+
+    .ai-message :deep(ul, ol) {
+        padding-left: 20px;
+    }
+
+    .ai-message :deep(blockquote) {
+        border-left: 4px solid #ccc;
+        margin: 0;
+        padding-left: 10px;
+    }
+</style>

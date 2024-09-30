@@ -1,0 +1,110 @@
+﻿@page "/"
+
+@using System.Net.Http
+@inject IHttpClientFactory HttpClientFactory
+
+<h3>Ollama Chat</h3>
+
+<div class="chat-container">
+    @foreach (var message in messages)
+    {
+        <div class="@(message.IsUser ? "user-message" : "bot-message")">
+            <p>@message.Content</p>
+        </div>
+    }
+</div>
+
+<div class="input-container">
+    <input @bind="userInput" @onkeyup="HandleKeyPress" placeholder="Type your message..." />
+    <button @onclick="SendMessage">Send</button>
+</div>
+
+@code {
+    private List<ChatMessage> messages = new List<ChatMessage>();
+    private string userInput = "";
+    private OllamaChatCompletionService chatService;
+
+    protected override void OnInitialized()
+    {
+        var httpClient = HttpClientFactory.CreateClient();
+        chatService = new OllamaChatCompletionService("http://localhost:11434", httpClient);
+    }
+
+    private async Task SendMessage()
+    {
+        if (string.IsNullOrWhiteSpace(userInput))
+            return;
+
+        var userMessage = new ChatMessage { IsUser = true, Content = userInput };
+        messages.Add(userMessage);
+        userInput = "";
+
+        StateHasChanged();
+
+        var response = await chatService.GetChatCompletionAsync(new OllamaSharp.ChatCompletionRequest
+        {
+            Model = "llama2",
+            Messages = messages.Select(m => new OllamaSharp.ChatCompletionMessage
+            {
+                Role = m.IsUser ? "user" : "assistant",
+                Content = m.Content
+            }).ToList()
+        });
+
+        var botMessage = new ChatMessage { IsUser = false, Content = response.Message.Content };
+        messages.Add(botMessage);
+
+        StateHasChanged();
+    }
+
+    private async Task HandleKeyPress(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            await SendMessage();
+        }
+    }
+
+    private class ChatMessage
+    {
+        public bool IsUser { get; set; }
+        public string Content { get; set; }
+    }
+}
+
+<style>
+    .chat-container {
+        height: 400px;
+        overflow-y: auto;
+        border: 1px solid #ccc;
+        padding: 10px;
+        margin-bottom: 10px;
+    }
+
+    .user-message {
+        background-color: #e6f2ff;
+        padding: 5px;
+        margin: 5px 0;
+        border-radius: 5px;
+    }
+
+    .bot-message {
+        background-color: #f0f0f0;
+        padding: 5px;
+        margin: 5px 0;
+        border-radius: 5px;
+    }
+
+    .input-container {
+        display: flex;
+    }
+
+    input {
+        flex-grow: 1;
+        padding: 5px;
+    }
+
+    button {
+        padding: 5px 10px;
+    }
+</style>
