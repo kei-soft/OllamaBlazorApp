@@ -26,9 +26,14 @@ namespace OllamaWinFormsApp
                 // AI 응답 비동기 처리
                 await foreach (var stream in ollamaApiClient!.Generate(humanTextBox.Text))
                 {
-                    aiTextBox.Invoke((MethodInvoker)delegate
+                    // UI 스레드에서 안전하게 텍스트 박스 업데이트
+                    await Task.Run(() =>
                     {
-                        aiTextBox.Text += stream!.Response;
+                        // 비동기 UI 업데이트 - 실시간으로 텍스트가 표시되도록 설정
+                        this.Invoke(new MethodInvoker(() =>
+                        {
+                            aiTextBox.Text += stream!.Response;
+                        }));
                     });
                 }
             }
