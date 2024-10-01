@@ -50,7 +50,7 @@
     private List<ChatMessage> chatHistory = new List<ChatMessage>();
     private string userInput = "";
     private bool isSending = false;
-    private OllamaApiClient ollama;
+    private OllamaApiClient ollamaApiClient;
     private List<string> availableModels = new List<string>();
     private string selectedModel = "";
 
@@ -58,16 +58,16 @@
     protected override async Task OnInitializedAsync()
     {
         var uri = new Uri("http://localhost:11434");
-        ollama = new OllamaApiClient(uri);
+        ollamaApiClient = new OllamaApiClient(uri);
 
         // 사용 가능한 모델 목록 가져오기
-        var models = await ollama.ListLocalModels();
+        var models = await ollamaApiClient.ListLocalModels();
         availableModels = models.Select(m => m.Name).ToList();
 
         if (availableModels.Any())
         {
             selectedModel = availableModels.First();
-            ollama.SelectedModel = selectedModel;
+            ollamaApiClient.SelectedModel = selectedModel;
         }
 
         await base.OnInitializedAsync();
@@ -106,9 +106,9 @@
         var aiMessage = new ChatMessage { Content = "", IsUser = false };
         chatHistory.Add(aiMessage);
 
-        ollama.SelectedModel = selectedModel;
+        ollamaApiClient.SelectedModel = selectedModel;
         string currentResponse = "";
-        await foreach (var stream in ollama.Generate(userInput))
+        await foreach (var stream in ollamaApiClient.Generate(userInput))
         {
             currentResponse += stream.Response;
             aiMessage.Content = currentResponse;

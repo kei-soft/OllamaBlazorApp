@@ -3,11 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.10.35013.160
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OllamaConsoleApp", "OllamaConsoleApp\OllamaConsoleApp.csproj", "{D096BC86-FEBA-48FB-B0FE-E211FEA2C80F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OllamaConsoleApp", "OllamaConsoleApp\OllamaConsoleApp.csproj", "{D096BC86-FEBA-48FB-B0FE-E211FEA2C80F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OllamaWinFormsApp", "OllamaWinFormsApp\OllamaWinFormsApp.csproj", "{08836969-8A60-4DCD-AF04-9F876B07BA7B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OllamaWinFormsApp", "OllamaWinFormsApp\OllamaWinFormsApp.csproj", "{08836969-8A60-4DCD-AF04-9F876B07BA7B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OllamaChatBlazorApp", "OllamaChatBlazorApp\OllamaChatBlazorApp.csproj", "{A6405F8F-F6D9-44ED-8EFB-A2E8CF29CA05}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OllamaChatBlazorApp", "OllamaChatBlazorApp\OllamaChatBlazorApp.csproj", "{A6405F8F-F6D9-44ED-8EFB-A2E8CF29CA05}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

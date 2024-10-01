@@ -27,16 +27,23 @@ namespace OllamaConsoleApp
 
                 //}
 
-                // set up the client
+                // HttpClient 인스턴스 생성
+                //using HttpClient client = new HttpClient();
+
+                // URL을 설정하고 HttpClient로 요청을 보냄
+                //var content = await client.GetStringAsync(@"http://v.daum.net/v/20241001161812756");
+
                 var uri = new Uri("http://localhost:11434");
-                var ollama = new OllamaApiClient(uri);
+                var ollamaApiClient = new OllamaApiClient(uri);
 
-                // select a model which should be used for further operations
-                ollama.SelectedModel = "llama3.2:latest";
+                ollamaApiClient.SelectedModel = "EEVE-Korean-10.8B:latest";
 
-                //var models = await ollama.ListLocalModels();
-                await foreach (var stream in ollama.Generate("How are you today?"))
+                await foreach (var stream in ollamaApiClient.Generate("서울의 맛집을 소개해줘"))
+                {
                     Console.Write(stream.Response);
+                }
+
+                Console.ReadKey();
             }
             catch (Exception ex)
             {
